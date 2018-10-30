@@ -35,6 +35,7 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - phi
+    - optparse-applicative
 
 tests:
   phi-test:
