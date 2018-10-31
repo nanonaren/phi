@@ -2,45 +2,33 @@ module Cmd
   (
     cmd
   , TrainParams (..)
-  , Cmd (..)
   ) where
 
 import           Data.Semigroup      ((<>))
 import           Options.Applicative
+import           Train
 
-data TrainParams = TrainParams
-  {
-    saveDirectory :: FilePath
-  , numColours    :: Int
-  }
-
-data Cmd = Train
-           {
-             trainData :: FilePath
-           , devData   :: FilePath
-           , params    :: TrainParams
-           }
-         | Retrain
-           {
-             directory :: FilePath
-           }
+tokenize :: Parser TokenizeOption
+tokenize =
+  flag Character Character (long "character" <> help "Make each character a token")
 
 trainParams :: Parser TrainParams
 trainParams = TrainParams
   <$> strOption (long "directory" <> metavar "DIR" <> help "Directory for saving model")
   <*> option auto (long "numColours" <> metavar "INT" <> help "Number of colours in the model")
 
-train :: Parser Cmd
+train :: Parser Train
 train = Train
   <$> strOption (long "trainData" <> metavar "FILE" <> help "Train data file")
   <*> strOption (long "devData" <> metavar "FILE" <> help "Dev data file")
   <*> trainParams
+  <*> tokenize
 
-retrain :: Parser Cmd
+retrain :: Parser Train
 retrain = Retrain
   <$> strOption (long "load" <> metavar "DIR" <> help "The directory to load from")
 
-cmd :: ParserInfo Cmd
+cmd :: ParserInfo Train
 cmd = info ((train <|> retrain) <**> helper)
   ( fullDesc
     <> progDesc "Finds a suitable sequence embedding"
