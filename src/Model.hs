@@ -25,9 +25,13 @@ new maxEmbeddings numC = (Model num H.empty . LambdaM)
   <$> newArray ((0, 0, 0), (maxEmbeddings, numC, 2)) 0
 
 
-addSample :: Model Thawed -> T.Text -> IO (UArray (Int, Int) Int)
+addSample :: Model Thawed -> T.Text -> IO (Model Thawed)
 addSample model txt = do
-  undefined
+  -- randomize embedding
+  es <- forM tokenize (tokenizer model) txt $ \token -> do
+    undefined
+  return model
+
 
 
 {-
