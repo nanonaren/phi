@@ -1,4 +1,10 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
 
 module Train
   (
@@ -8,10 +14,27 @@ module Train
   , initialize
   ) where
 
-import qualified Data.ByteString.Lazy as B
+import           Control.Monad.IO.Class  (liftIO)
+import qualified Data.ByteString         as B
+import qualified Data.ByteString.Lazy    as LB
 import           Data.Csv.Streaming
-import           Data.Foldable        (forM_)
-import qualified Data.Text            as T
+import           Data.Foldable           (for_)
+import qualified Data.Text               as T
+import           Database.Persist
+import           Database.Persist.Sqlite (runMigration, runSqlite)
+import           Database.Persist.TH
+
+
+share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+TrainData
+    text T.Text
+    embedding B.ByteString
+    class Int
+    visited Int
+    isDev Bool
+    deriving Show
+|]
+
 
 data Train = Train
              {
@@ -34,8 +57,11 @@ data TrainParams = TrainParams
   }
 
 initialize :: Train -> IO ()
-initialize config@Train{} = do
-  dat <- B.readFile (trainData config)
-  forM_ (decode HasHeader dat) $ \(string :: T.Text, label :: Int) -> do
+initialize config@Train{} = runSqlite (saveDirectory (params config) ++ "/data.db") $ do
+  runMigration migrateAll
+  dat <- liftIO $ LB.readFile (trainData config)
+  for_ (decode HasHeader dat) $ \(string :: T.Text, label :: Int) -> do
+    case tokenizeOption config of
+      Character -> show string
     putStrLn (show string ++ "(" ++ show label ++ ")")
 initialize _ = error "not possible"

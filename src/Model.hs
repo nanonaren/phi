@@ -3,10 +3,13 @@ module Model
     Model (..)
   ) where
 
-import           Data.HashMap.Strict as H
+import           Control.Monad       (forM)
+import           Data.Array.IO       (IOArray, newArray)
+import           Data.Array.Unboxed  (UArray)
+import qualified Data.HashMap.Strict as H
 import           Data.Text           as T
 
-data Lambda = LambdaF (Array (Int, Int, Int) Int)
+data Lambda = LambdaF (UArray (Int, Int, Int) Int)
   | LambdaM (IOArray (Int, Int, Int) Int)
 
 data Frozen
@@ -21,15 +24,15 @@ data Model a = Model
 
 
 new :: Int -> Int -> IO (Model Thawed)
-new maxEmbeddings numC = (Model num H.empty . LambdaM)
+new maxEmbeddings numC = (Model numC H.empty . LambdaM)
   <$> newArray ((0, 0, 0), (maxEmbeddings, numC, 2)) 0
 
 
 addSample :: Model Thawed -> T.Text -> IO (Model Thawed)
 addSample model txt = do
   -- randomize embedding
-  es <- forM tokenize (tokenizer model) txt $ \token -> do
-    undefined
+  _ <- error "tokenize and randomly initialize" -- forM tokenize (tokenizer model) txt $ \token -> do
+  --  undefined
   return model
 
 

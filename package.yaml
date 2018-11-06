@@ -20,10 +20,15 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/nanonaren/phi#readme>
 
 dependencies:
+- array
 - base >= 4.7 && < 5
 - bytestring
 - cassava
+- persistent
+- persistent-sqlite
+- persistent-template
 - text
+- unordered-containers
 
 library:
   source-dirs: src
