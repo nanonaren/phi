@@ -20,7 +20,6 @@ trainParams = TrainParams
 train :: Parser Train
 train = Train
   <$> strOption (long "trainData" <> metavar "FILE" <> help "Train data file")
-  <*> strOption (long "devData" <> metavar "FILE" <> help "Dev data file")
   <*> trainParams
   <*> tokenize
 

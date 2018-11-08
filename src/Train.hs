@@ -23,6 +23,8 @@ import qualified Data.Text               as T
 import           Database.Persist
 import           Database.Persist.Sqlite (runMigration, runSqlite)
 import           Database.Persist.TH
+import           System.Directory        (createDirectory)
+import           System.IO.Error         (catchIOError, isAlreadyExistsError)
 
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
@@ -39,7 +41,6 @@ TrainData
 data Train = Train
              {
                trainData      :: FilePath
-             , devData        :: FilePath
              , params         :: TrainParams
              , tokenizeOption :: TokenizeOption
              }
@@ -57,11 +58,18 @@ data TrainParams = TrainParams
   }
 
 initialize :: Train -> IO ()
-initialize config@Train{} = runSqlite (saveDirectory (params config) ++ "/data.db") $ do
-  runMigration migrateAll
-  dat <- liftIO $ LB.readFile (trainData config)
-  for_ (decode HasHeader dat) $ \(string :: T.Text, label :: Int) -> do
-    case tokenizeOption config of
-      Character -> show string
-    putStrLn (show string ++ "(" ++ show label ++ ")")
+initialize config@Train{} = do
+  let dir = saveDirectory (params config)
+  catchIOError (createDirectory dir) $ \err ->
+    if isAlreadyExistsError err
+    then error ("The directory `" ++ dir ++ "` already exists!")
+    else error (show err)
+
+  runSqlite (T.pack $ dir ++ "/data.db") $ do
+    runMigration migrateAll
+    dat <- liftIO $ LB.readFile (trainData config)
+    for_ (decode HasHeader dat) $ \(string :: T.Text, label :: Int, isDev :: Int) -> do
+      -- case tokenizeOption config of
+      --   Character -> show string
+      liftIO $ putStrLn (show string ++ "(" ++ show label ++ ")" ++ ", " ++ show isDev)
 initialize _ = error "not possible"
