@@ -5,11 +5,16 @@ module Tokenize
   ) where
 
 
-import           Data.Text (Text, singleton)
+import           Data.Text            (Text, singleton)
+import           Text.Megaparsec
+import           Text.Megaparsec.Char (printChar)
 
 
 data TokenizeConfig = Character
 
 
-tokenizer :: TokenizeConfig -> Text -> Maybe [Text]
-tokenizer Character = parseMaybe (many printChar)
+tokenize :: TokenizeConfig -> Text -> Maybe [Text]
+tokenize config = parseMaybe (tokenize' config)
+
+tokenize' :: TokenizeConfig -> Parsec () Text [Text]
+tokenize' Character = (singleton <$>) <$> some printChar

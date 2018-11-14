@@ -25,6 +25,7 @@ dependencies:
 - bytestring
 - cassava
 - directory
+- megaparsec
 - persistent
 - persistent-sqlite
 - persistent-template

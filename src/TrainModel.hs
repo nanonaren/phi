@@ -18,7 +18,7 @@ data ModelConfig = ModelConfig
   , directory :: FilePath
   , trainData :: FilePath
   }
-  
+
 data Model = Model
   {
     lambda :: IOArray (Int, Int, Int) Int
